@@ -20,20 +20,18 @@ export const metadata: Metadata = {
   },
   description:
     "A community-powered platform for discovering, reporting, and resolving accessibility barriers.",
-  applicationName: "AccessMap",
   keywords: [
     "accessibility",
     "community",
     "civic technology",
+    "accessible spaces",
     "accessibility barriers",
-    "inclusive design",
   ],
-  openGraph: {
-    title: "AccessMap",
-    description:
-      "See barriers. Report them. Create change.",
-    type: "website",
-  },
+  authors: [
+    {
+      name: "AccessMap",
+    },
+  ],
 };
 
 export default function RootLayout({

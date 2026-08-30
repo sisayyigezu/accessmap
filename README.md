@@ -14,6 +14,17 @@ Reporting these issues can also feel like a dead end. AccessMap makes the proces
 
 **Report → Review → Action → Resolution**
 
+## 🔐 Demo Admin Access
+
+To check the admin workflow:
+
+**Admin Dashboard:** [Open Admin Dashboard](https://accessmap-brown.vercel.app//admin)
+
+- **Email:** `demo-admin@accessmap.app`
+- **Password:** `12345678`
+
+> This is a disposable demo account. AccessMap's MVP uses explicitly allowlisted administrator accounts enforced through Supabase Auth and PostgreSQL Row Level Security. A production version would use organization membership and role-based access control.
+
 ## Features
 
 ### Community

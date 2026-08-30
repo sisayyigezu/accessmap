@@ -1,36 +1,162 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ♿ AccessMap
 
-## Getting Started
+**See barriers. Report them. Create change.**
 
-First, run the development server:
+AccessMap is a community-powered web app for reporting, discovering, and tracking accessibility barriers in public spaces.
+
+Built for **HackSocial 2025**.
+
+## The Problem
+
+Accessibility barriers such as broken elevators, blocked ramps, inaccessible entrances, and obstructed pathways can prevent people from accessing everyday spaces.
+
+Reporting these issues can also feel like a dead end. AccessMap makes the process transparent:
+
+**Report → Review → Action → Resolution**
+
+## Features
+
+### Community
+- Report accessibility barriers
+- Explore community reports
+- View barriers on an interactive map
+- Add current location to reports
+- Track report status
+- See organization updates
+
+### Organizations
+- Secure admin login
+- Review incoming reports
+- Verify accessibility issues
+- Mark issues as in progress
+- Publish public updates
+- Mark issues as resolved
+
+## Report Lifecycle
+
+```text
+Submitted → Verified → In Progress → Resolved
+```
+
+Reports remain visible so the community can see what happens after an issue is submitted.
+
+## Tech Stack
+
+- **Next.js + React** — web application
+- **TypeScript** — type safety
+- **Tailwind CSS** — UI styling
+- **Supabase** — backend and authentication
+- **PostgreSQL** — database
+- **Row Level Security (RLS)** — database permissions
+- **Leaflet + OpenStreetMap** — interactive map
+- **Lucide React** — icons
+- **Vercel** — deployment
+
+## Project Structure
+
+```text
+accessmap/
+├── public/
+├── src/
+│   ├── app/
+│   │   ├── admin/
+│   │   │   └── page.tsx
+│   │   ├── issues/
+│   │   │   └── [id]/
+│   │   │       └── page.tsx
+│   │   ├── report/
+│   │   │   └── page.tsx
+│   │   ├── globals.css
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   │
+│   ├── components/
+│   │   ├── accessibility-map.tsx
+│   │   ├── map-section.tsx
+│   │   ├── navbar.tsx
+│   │   ├── report-card.tsx
+│   │   └── status-badge.tsx
+│   │
+│   ├── lib/
+│   │   ├── report-mappers.ts
+│   │   └── supabase.ts
+│   │
+│   └── types/
+│       └── report.ts
+│
+├── .env.local
+├── package.json
+└── README.md
+```
+
+## Security
+
+Supabase Row Level Security controls database access.
+
+**Public users can:**
+- Read reports
+- Submit reports
+
+**Public users cannot:**
+- Modify existing reports
+- Delete reports
+- Publish organization updates
+
+For this MVP, administrator accounts are manually provisioned through Supabase.
+
+## Run Locally
+
+Requirements:
+
+- Node.js 20.9+
+- npm
+- Supabase project
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Create `.env.local`:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_publishable_key
+```
+
+Start development:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```text
+http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Production Check
 
-## Learn More
+```bash
+npm run lint
+npm run build
+npm start
+```
 
-To learn more about Next.js, take a look at the following resources:
+## What's Next
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+With more time, AccessMap could add:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Photo evidence
+- AI-assisted report categorization
+- Organization roles and permissions
+- Notifications
+- Address search/geocoding
 
-## Deploy on Vercel
+## Built for HackSocial 2026
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Accessibility barriers become easier to address when communities can make them visible.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**AccessMap — See barriers. Report them. Create change.**

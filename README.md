@@ -4,7 +4,7 @@
 
 AccessMap is a community-powered web app for reporting, discovering, and tracking accessibility barriers in public spaces.
 
-Built for **HackSocial 2025**.
+Built for **HackSocial 2026**.
 
 ## The Problem
 

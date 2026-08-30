@@ -7,11 +7,41 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
+import { MapSection } from "@/components/map-section";
 import { Navbar } from "@/components/navbar";
 import { ReportCard } from "@/components/report-card";
-import { reports } from "@/data/reports";
+import {
+  mapDatabaseReport,
+  type DatabaseReport,
+} from "@/lib/report-mappers";
+import { supabase } from "@/lib/supabase";
 
-export default function Home() {
+export default async function Home() {
+  const { data, error } = await supabase
+    .from("reports")
+    .select(
+      `
+        id,
+        title,
+        location_name,
+        address,
+        category,
+        description,
+        severity,
+        status,
+        latitude,
+        longitude,
+        admin_note,
+        created_at,
+        updated_at
+      `,
+    )
+    .order("created_at", { ascending: false });
+
+  const reports = error
+    ? []
+    : ((data ?? []) as DatabaseReport[]).map(mapDatabaseReport);
+
   const activeReports = reports.filter(
     (report) => report.status !== "resolved",
   );
@@ -28,6 +58,7 @@ export default function Home() {
     <main className="min-h-screen bg-slate-50">
       <Navbar />
 
+      {/* HERO SECTION */}
       <section className="relative overflow-hidden border-b border-slate-200 bg-white">
         <div
           className="pointer-events-none absolute inset-0 opacity-60"
@@ -93,10 +124,12 @@ export default function Home() {
                   value={String(activeReports.length)}
                   label="Active"
                 />
+
                 <Metric
                   value={String(inProgressReports.length)}
                   label="In progress"
                 />
+
                 <Metric
                   value={String(resolvedReports.length)}
                   label="Resolved"
@@ -125,6 +158,10 @@ export default function Home() {
         </div>
       </section>
 
+      {/* MAP SECTION — NEW */}
+      {!error && <MapSection reports={reports} />}
+
+      {/* REPORTS SECTION */}
       <section
         id="reports"
         className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8"
@@ -150,7 +187,18 @@ export default function Home() {
           </p>
         </div>
 
-        {reports.length > 0 ? (
+        {error ? (
+          <div className="mt-8 rounded-2xl border border-red-200 bg-red-50 p-6">
+            <h3 className="font-bold text-red-900">
+              Reports could not be loaded
+            </h3>
+
+            <p className="mt-2 text-sm leading-6 text-red-800">
+              AccessMap is having trouble reaching the database. Please try
+              again shortly.
+            </p>
+          </div>
+        ) : reports.length > 0 ? (
           <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             {reports.map((report) => (
               <ReportCard
@@ -177,6 +225,7 @@ export default function Home() {
         )}
       </section>
 
+      {/* HOW IT WORKS */}
       <section className="border-t border-slate-200 bg-white">
         <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:px-6 md:grid-cols-3 lg:px-8">
           <Step
@@ -204,6 +253,7 @@ export default function Home() {
           <span className="font-bold text-slate-800">
             AccessMap
           </span>
+
           <span>
             Making accessibility barriers visible and actionable.
           </span>
@@ -222,7 +272,10 @@ function Metric({
 }) {
   return (
     <div className="rounded-xl bg-white/10 p-3">
-      <div className="text-2xl font-black">{value}</div>
+      <div className="text-2xl font-black">
+        {value}
+      </div>
+
       <div className="mt-1 text-xs font-semibold text-slate-300">
         {label}
       </div>

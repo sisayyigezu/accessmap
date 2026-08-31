@@ -29,6 +29,8 @@ To check the admin workflow:
 
 ### Community
 - Report accessibility barriers
+- Attach photo evidence to reports
+- Use AI-assisted reporting to turn natural descriptions into structured reports
 - Explore community reports
 - View barriers on an interactive map
 - Add current location to reports
@@ -57,8 +59,10 @@ Reports remain visible so the community can see what happens after an issue is s
 - **TypeScript** — type safety
 - **Tailwind CSS** — UI styling
 - **Supabase** — backend and authentication
+- **Supabase Storage** — photo evidence storage
 - **PostgreSQL** — database
 - **Row Level Security (RLS)** — database permissions
+- **OpenAI API** — AI-assisted report structuring
 - **Leaflet + OpenStreetMap** — interactive map
 - **Lucide React** — icons
 - **Vercel** — deployment
@@ -72,6 +76,9 @@ accessmap/
 │   ├── app/
 │   │   ├── admin/
 │   │   │   └── page.tsx
+│   │   ├── api/
+│   │   │   └── assist-report/
+│   │   │       └── route.ts
 │   │   ├── issues/
 │   │   │   └── [id]/
 │   │   │       └── page.tsx
@@ -107,6 +114,7 @@ Supabase Row Level Security controls database access.
 **Public users can:**
 - Read reports
 - Submit reports
+- Upload report photo evidence
 
 **Public users cannot:**
 - Modify existing reports
@@ -115,6 +123,8 @@ Supabase Row Level Security controls database access.
 
 For this MVP, administrator accounts are manually provisioned through Supabase.
 
+The OpenAI API key is kept server-side and is never exposed to the browser. If the external AI service is unavailable, AccessMap falls back to basic automatic report categorization so reporting remains functional.
+
 ## Run Locally
 
 Requirements:
@@ -122,6 +132,7 @@ Requirements:
 - Node.js 20.9+
 - npm
 - Supabase project
+- OpenAI API key for AI-assisted reporting
 
 Install dependencies:
 
@@ -134,6 +145,7 @@ Create `.env.local`:
 ```env
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_publishable_key
+OPENAI_API_KEY=your_openai_api_key
 ```
 
 Start development:
@@ -160,8 +172,6 @@ npm start
 
 With more time, AccessMap could add:
 
-- Photo evidence
-- AI-assisted report categorization
 - Organization roles and permissions
 - Notifications
 - Address search/geocoding

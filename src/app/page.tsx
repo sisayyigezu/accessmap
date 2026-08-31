@@ -147,13 +147,10 @@ export default async function Home() {
               />
 
               <div>
-                <p className="font-bold text-emerald-950">
-                  Reports don&apos;t disappear into a form.
-                </p>
 
                 <p className="mt-1 text-sm leading-6 text-emerald-800">
-                  Community members can follow each issue from submission
-                  through review, action, and resolution.
+                  Follow each issue from submissionthrough 
+                  review, action, and resolution.
                 </p>
               </div>
             </div>

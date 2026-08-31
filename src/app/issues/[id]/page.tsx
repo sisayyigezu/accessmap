@@ -41,6 +41,7 @@ export default async function IssuePage({
         latitude,
         longitude,
         admin_note,
+        image_url,
         created_at,
         updated_at
       `,
@@ -151,6 +152,16 @@ export default async function IssuePage({
               <p className="mt-4 leading-7 text-slate-600">
                 {report.description}
               </p>
+              {report.imageUrl && (
+                <div className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-slate-100">
+                 {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={report.imageUrl}
+                    alt={`Photo evidence for ${report.title}`}
+                    className="max-h-[480px] w-full object-cover"
+                  />
+                </div>
+              )}
             </section>
 
             <section className="mt-8">

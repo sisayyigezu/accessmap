@@ -30,4 +30,5 @@ export type AccessibilityReport = {
   updatedAt: string;
   reporterName?: string;
   adminNote?: string;
+  imageUrl?: string;
 };

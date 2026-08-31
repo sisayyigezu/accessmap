@@ -34,6 +34,7 @@ export default async function Home() {
         latitude,
         longitude,
         admin_note,
+        image_url,
         created_at,
         updated_at
       `,

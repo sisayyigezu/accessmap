@@ -1,14 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { FormEvent, useRef, useState } from "react";
 import {
   ArrowLeft,
   CheckCircle2,
+  ImagePlus,
   LocateFixed,
   LoaderCircle,
   MapPin,
   Send,
+  Sparkles
 } from "lucide-react";
 
 import { supabase } from "@/lib/supabase";
@@ -45,6 +47,11 @@ export default function ReportPage() {
   const [submitted, setSubmitted] = useState(false);
   const [locating, setLocating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [photo, setPhoto] = useState<File | null>(null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const [aiInput, setAiInput] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  
 
   function updateField<K extends keyof FormData>(
     field: K,
@@ -91,7 +98,125 @@ export default function ReportPage() {
       },
     );
   }
+  function structureLocally() {
+  const text = aiInput.trim();
 
+  let category: BarrierCategory = "other";
+  let severity: ReportSeverity = "medium";
+
+  const lower = text.toLowerCase();
+
+  if (lower.includes("elevator") || lower.includes("lift")) {
+    category = "elevator";
+  } else if (lower.includes("ramp")) {
+    category = "ramp";
+  } else if (
+    lower.includes("sidewalk") ||
+    lower.includes("path") ||
+    lower.includes("walkway")
+  ) {
+    category = "sidewalk";
+  } else if (
+    lower.includes("restroom") ||
+    lower.includes("bathroom") ||
+    lower.includes("toilet")
+  ) {
+    category = "restroom";
+  } else if (
+    lower.includes("door") ||
+    lower.includes("entrance") ||
+    lower.includes("stairs")
+  ) {
+    category = "entrance";
+  } else if (lower.includes("construction")) {
+    category = "construction";
+  }
+
+  if (
+    lower.includes("cannot") ||
+    lower.includes("can't") ||
+    lower.includes("blocked") ||
+    lower.includes("no access") ||
+    lower.includes("prevent")
+  ) {
+    severity = "high";
+  } else if (
+    lower.includes("difficult") ||
+    lower.includes("hard to") ||
+    lower.includes("broken")
+  ) {
+    severity = "medium";
+  }
+
+  const title =
+    text.length > 80
+      ? `${text.slice(0, 77)}...`
+      : text;
+
+  setForm((current) => ({
+    ...current,
+    title,
+    category,
+    severity,
+    description: text,
+  }));
+
+  setError(
+    "AI assistance is currently unavailable, so AccessMap used basic automatic categorization instead. Please review the suggested fields before submitting.",
+  );
+}
+  async function structureWithAI() {
+  if (aiInput.trim().length < 15) {
+    setError(
+      "Describe the barrier in a little more detail before using AI assistance.",
+    );
+    return;
+  }
+
+  setError(null);
+  setAiLoading(true);
+
+  try {
+    const response = await fetch("/api/assist-report", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        rawReport: aiInput,
+      }),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+  if (result.fallback) {
+    structureLocally();
+    return;
+  }
+
+  throw new Error(
+    result.error || "AI assistance failed.",
+  );
+}
+
+    setForm((current) => ({
+      ...current,
+      title: result.title,
+      category: result.category,
+      severity: result.severity,
+      description: result.description,
+    }));
+  } catch (error) {
+    console.error(error);
+
+    setError(
+      "AI assistance is unavailable right now. You can still complete the report manually.",
+    );
+  } finally {
+    setAiLoading(false);
+  }
+}
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -116,6 +241,50 @@ export default function ReportPage() {
 
     setSubmitting(true);
 
+    let imageUrl: string | null = null;
+
+if (photo) {
+  if (!photo.type.startsWith("image/")) {
+    setError("Please choose an image file.");
+    setSubmitting(false);
+    return;
+  }
+
+  if (photo.size > 5 * 1024 * 1024) {
+    setError("Photo must be smaller than 5 MB.");
+    setSubmitting(false);
+    return;
+  }
+
+  const extension = photo.name.split(".").pop()?.toLowerCase() || "jpg";
+
+  const filePath = `reports/${crypto.randomUUID()}.${extension}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from("report-images")
+    .upload(filePath, photo, {
+      contentType: photo.type,
+      upsert: false,
+    });
+
+  if (uploadError) {
+    console.error("Photo upload failed:", uploadError);
+
+    setError(
+      "We couldn't upload the photo. Please try again or submit without it.",
+    );
+
+    setSubmitting(false);
+    return;
+  }
+
+  const { data: publicUrlData } = supabase.storage
+    .from("report-images")
+    .getPublicUrl(filePath);
+
+  imageUrl = publicUrlData.publicUrl;
+}
+
     const { error: insertError } = await supabase
       .from("reports")
       .insert({
@@ -127,6 +296,7 @@ export default function ReportPage() {
         severity: form.severity,
         latitude: form.latitude,
         longitude: form.longitude,
+        image_url: imageUrl,
       });
 
     if (insertError) {
@@ -258,6 +428,56 @@ export default function ReportPage() {
               {error}
             </div>
           )}
+
+          <div className="mb-8 rounded-2xl border border-violet-200 bg-violet-50 p-5 sm:p-6">
+  <div className="flex items-start gap-3">
+    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-violet-700">
+      <Sparkles size={20} />
+    </span>
+
+    <div className="flex-1">
+      <p className="font-bold text-violet-950">
+        Describe it naturally
+      </p>
+
+      <p className="mt-1 text-sm leading-6 text-violet-800">
+        AI can organize your description into a clear report. You can review
+        and edit everything before submitting.
+      </p>
+    </div>
+  </div>
+
+  <textarea
+    value={aiInput}
+    onChange={(event) => setAiInput(event.target.value)}
+    rows={3}
+    maxLength={1200}
+    placeholder="e.g. The elevator has been broken for three days and wheelchair users cannot reach the second floor."
+    className="mt-4 w-full resize-y rounded-xl border border-violet-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none focus:border-violet-500 focus:ring-4 focus:ring-violet-100"
+  />
+
+  <button
+    type="button"
+    onClick={structureWithAI}
+    disabled={aiLoading}
+    className="mt-3 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-violet-700 px-4 py-2 text-sm font-bold text-white transition hover:bg-violet-800 disabled:cursor-not-allowed disabled:opacity-60"
+  >
+    {aiLoading ? (
+      <>
+        <LoaderCircle
+          size={17}
+          className="animate-spin"
+        />
+        Structuring report...
+      </>
+    ) : (
+      <>
+        <Sparkles size={17} />
+        Structure with AI
+      </>
+    )}
+  </button>
+</div>
 
           <div className="grid gap-6">
             <Field>
@@ -399,6 +619,118 @@ export default function ReportPage() {
               </div>
             </Field>
           </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+  <div className="flex items-start gap-3">
+    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-blue-700">
+      <ImagePlus size={20} />
+    </span>
+
+    <div className="flex-1">
+      <label
+        htmlFor="photo"
+        className="font-bold text-slate-950"
+      >
+        Add photo evidence
+      </label>
+
+      <p className="mt-1 text-sm leading-6 text-slate-600">
+        Optional. Upload a JPG or PNG image up to 5 MB.
+      </p>
+
+      <input
+        ref={photoInputRef}
+        id="photo"
+        type="file"
+        accept="image/jpeg,image/png"
+        onChange={(event) => {
+          const file = event.target.files?.[0] ?? null;
+
+          if (!file) {
+            setPhoto(null);
+            return;
+          }
+
+          const allowedTypes = [
+            "image/jpeg",
+            "image/png",
+          ];
+
+          if (!allowedTypes.includes(file.type)) {
+            setError("Please choose a JPG or PNG image.");
+            event.target.value = "";
+            setPhoto(null);
+            return;
+          }
+
+          if (file.size > 5 * 1024 * 1024) {
+            setError("Photo must be 5 MB or smaller.");
+            event.target.value = "";
+            setPhoto(null);
+            return;
+          }
+
+          setError(null);
+          setPhoto(file);
+        }}
+        className="sr-only"
+      />
+
+      {!photo ? (
+        <label
+          htmlFor="photo"
+          className="mt-4 inline-flex min-h-11 cursor-pointer items-center justify-center rounded-xl border border-blue-200 bg-white px-4 py-2 text-sm font-bold text-blue-700 transition hover:bg-blue-100"
+        >
+          Choose photo
+        </label>
+      ) : (
+        <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+          <div className="flex items-start gap-3">
+            <CheckCircle2
+              size={18}
+              className="mt-0.5 shrink-0 text-emerald-700"
+            />
+
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-bold text-emerald-900">
+                {photo.name}
+              </p>
+
+              <p className="mt-1 text-xs font-medium text-emerald-700">
+                {(photo.size / 1024 / 1024).toFixed(2)} MB ·{" "}
+                {photo.type === "image/jpeg" ? "JPG" : "PNG"}
+              </p>
+
+              <div className="mt-3 flex flex-wrap items-center gap-4">
+                <label
+                  htmlFor="photo"
+                  className="cursor-pointer text-sm font-bold text-blue-700 transition hover:text-blue-900"
+                >
+                  Change photo
+                </label>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPhoto(null);
+                    setError(null);
+
+                    if (photoInputRef.current) {
+                      photoInputRef.current.value = "";
+                    }
+                  }}
+                  className="text-sm font-bold text-red-600 transition hover:text-red-800"
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+</div>
 
           <div className="mt-6 rounded-2xl border border-blue-100 bg-blue-50 p-5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

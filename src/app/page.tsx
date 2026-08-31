@@ -141,15 +141,12 @@ export default async function Home() {
             </div>
 
             <div className="mt-4 flex items-start gap-3 rounded-2xl bg-emerald-50 p-4">
-              <CheckCircle2
-                className="mt-0.5 shrink-0 text-emerald-700"
-                size={20}
-              />
+              
 
               <div>
 
                 <p className="mt-1 text-sm leading-6 text-emerald-800">
-                  Follow each issue from submissionthrough 
+                  Follow each issue from submission through 
                   review, action, and resolution.
                 </p>
               </div>
